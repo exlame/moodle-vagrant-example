@@ -31,6 +31,22 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Customize virtual machine.
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--memory", "8192"]
-    vb.customize ["modifyvm", :id, "--name", "moodle-dev-example"]
+    #vb.customize ["modifyvm", :id, "--name", "moodle-dev-example"]
   end
+  
+  
+  # BACKUP MYSQL DATABASES
+  config.trigger.after :reload do
+    info "Backup DB"
+    run_remote  "sh /vagrant/triggers/db_restore.sh"
+  end
+  config.trigger.before :reload do
+    info "Backup DB"
+    run_remote  "sh /vagrant/triggers/db_backup.sh"
+  end
+  
+  ## Provisionning
+  config.vm.provision :shell, path: "provision.sh"
+  
+  config.vm.provision :shell, inline: "node /srv/wetty/app.js -p 3000 > /dev/null 2>&1 &", run: "always"
 end
